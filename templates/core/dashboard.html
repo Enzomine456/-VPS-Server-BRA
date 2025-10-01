@@ -1,0 +1,459 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - ExitLag Free{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="display-6 fw-bold mb-2">
+                <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                Dashboard
+            </h1>
+            <p class="lead text-muted">
+                Olá, {{ user.first_name|default:user.username }}! Gerencie suas conexões e otimize seus jogos.
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                {% if active_connection %}
+                    <button class="btn btn-danger" onclick="disconnect()">
+                        <i class="fas fa-times me-2"></i>Desconectar
+                    </button>
+                {% else %}
+                    <a href="{% url 'servers' %}" class="btn btn-success">
+                        <i class="fas fa-play me-2"></i>Conectar
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if active_connection %}
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Conectado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Servidor</h6>
+                                <p class="mb-0">
+                                    <span class="flag-icon">{{ active_connection.server.flag_icon }}</span>
+                                    {{ active_connection.server.name }}
+                                </p>
+                                <small class="text-muted">{{ active_connection.server.city }}, {{ active_connection.server.country }}</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Ping Atual</h6>
+                                <p class="mb-0 text-success fs-4 fw-bold">{{ active_connection.ping_after }}ms</p>
+                                {% if active_connection.ping_before > active_connection.ping_after %}
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-down me-1"></i>
+                                        -{{ active_connection.ping_before|add:active_connection.ping_after|floatformat:0 }}ms melhoria
+                                    </small>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Tempo Conectado</h6>
+                                <p class="mb-0" id="connection-time">
+                                    <i class="fas fa-clock me-1"></i>
+                                    <span id="duration">Calculando...</span>
+                                </p>
+                            </div>
+                            <div class="col-md-3">
+                                {% if active_connection.game %}
+                                    <h6 class="text-muted">Jogo Otimizado</h6>
+                                    <p class="mb-0">
+                                        <i class="fas fa-gamepad me-1"></i>
+                                        {{ active_connection.game.name }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Desconectado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3">Você não está conectado a nenhum servidor. Conecte-se para começar a otimizar seus jogos!</p>
+                        <a href="{% url 'servers' %}" class="btn btn-primary">
+                            <i class="fas fa-server me-2"></i>Escolher Servidor
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-primary mb-2">
+                        <i class="fas fa-server fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold">{{ recommended_servers|length }}</h4>
+                    <p class="text-muted mb-0">Servidores Disponíveis</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-success mb-2">
+                        <i class="fas fa-gamepad fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold">{{ favorite_games|length }}</h4>
+                    <p class="text-muted mb-0">Jogos Favoritos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-history fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold">{{ recent_connections|length }}</h4>
+                    <p class="text-muted mb-0">Conexões Recentes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-info mb-2">
+                        <i class="fas fa-infinity fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold">100%</h4>
+                    <p class="text-muted mb-0">Gratuito</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Recommended Servers -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        Servidores Recomendados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recommended_servers %}
+                        <div class="row g-3">
+                            {% for server in recommended_servers %}
+                                <div class="col-md-6">
+                                    <div class="server-card p-3 border rounded">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <span class="flag-icon me-2">{{ server.flag_icon }}</span>
+                                                    {{ server.name }}
+                                                </h6>
+                                                <small class="text-muted">{{ server.city }}, {{ server.country }}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="ping-badge">{{ server.ping }}ms</div>
+                                                <button class="btn btn-sm btn-outline-primary mt-1" 
+                                                        onclick="connectToServer({{ server.id }}, '{{ server.name }}')">
+                                                    Conectar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Nenhum servidor disponível no momento.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Connections -->
+            {% if recent_connections %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Conexões Recentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Servidor</th>
+                                    <th>Jogo</th>
+                                    <th>Ping</th>
+                                    <th>Status</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for connection in recent_connections %}
+                                <tr>
+                                    <td>
+                                        <span class="flag-icon me-2">{{ connection.server.flag_icon }}</span>
+                                        {{ connection.server.name }}
+                                    </td>
+                                    <td>
+                                        {% if connection.game %}
+                                            <i class="fas fa-gamepad me-1"></i>{{ connection.game.name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if connection.ping_after %}
+                                            <span class="badge bg-success">{{ connection.ping_after }}ms</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if connection.status == 'connected' %}
+                                            <span class="badge bg-success">Conectado</span>
+                                        {% elif connection.status == 'disconnected' %}
+                                            <span class="badge bg-secondary">Desconectado</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ connection.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if connection.connected_at %}
+                                            {{ connection.connected_at|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Favorite Games -->
+            {% if favorite_games %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-heart text-danger me-2"></i>
+                        Jogos Favoritos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        {% for game in favorite_games %}
+                            <div class="col-6">
+                                <div class="text-center p-2 border rounded">
+                                    {% if game.icon %}
+                                        <img src="{{ game.icon.url }}" alt="{{ game.name }}" class="game-icon-small mb-1">
+                                    {% else %}
+                                        <i class="fas fa-gamepad fa-2x text-primary mb-1"></i>
+                                    {% endif %}
+                                    <div class="small fw-bold">{{ game.name }}</div>
+                                    <div class="text-muted small">{{ game.category }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'games' %}" class="btn btn-outline-primary btn-sm">
+                            Ver Todos os Jogos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Estatísticas Rápidas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Melhor Ping Obtido:</span>
+                            <span class="text-success fw-bold">
+                                {% if recent_connections %}
+                                    {{ recent_connections.0.ping_after|default:"--" }}ms
+                                {% else %}
+                                    --ms
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Servidor Favorito:</span>
+                            <span class="fw-bold">
+                                {% if profile.preferred_server %}
+                                    {{ profile.preferred_server.name }}
+                                {% else %}
+                                    Nenhum
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <a href="{% url 'profile' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-user-cog me-1"></i>Configurar Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.server-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.server-card:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff !important;
+}
+
+.ping-badge {
+    background: #e9ecef;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.game-icon-small {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+}
+
+.flag-icon {
+    font-size: 1.2em;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.connection-pulse {
+    animation: pulse 2s infinite;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Atualizar tempo de conexão
+{% if active_connection and active_connection.connected_at %}
+function updateConnectionTime() {
+    const connectedAt = new Date('{{ active_connection.connected_at|date:"c" }}');
+    const now = new Date();
+    const diff = now - connectedAt;
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    let timeString = '';
+    if (hours > 0) timeString += hours + 'h ';
+    if (minutes > 0) timeString += minutes + 'm ';
+    timeString += seconds + 's';
+    
+    document.getElementById('duration').textContent = timeString;
+}
+
+updateConnectionTime();
+setInterval(updateConnectionTime, 1000);
+{% endif %}
+
+// Conectar a servidor
+function connectToServer(serverId, serverName) {
+    if (confirm(`Conectar ao servidor ${serverName}?`)) {
+        fetch(`/connect/${serverId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ping_before: Math.floor(Math.random() * 100) + 50 // Simular ping antes
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao conectar: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Erro de conexão');
+        });
+    }
+}
+
+// Desconectar
+function disconnect() {
+    if (confirm('Desconectar do servidor?')) {
+        fetch('/disconnect/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao desconectar: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Erro de conexão');
+        });
+    }
+}
+</script>
+{% endblock %}

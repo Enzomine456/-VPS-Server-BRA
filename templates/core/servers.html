@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Servidores VPN - ExitLag Free{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="display-6 fw-bold mb-2">
+                <i class="fas fa-server text-primary me-2"></i>
+                Servidores VPN
+            </h1>
+            <p class="lead text-muted">
+                Escolha o melhor servidor para otimizar sua conexão de jogo.
+            </p>
+        </div>
+        <div class="col-lg-4">
+            <!-- Filtros -->
+            <form method="get" class="d-flex gap-2">
+                <select name="country" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todos os países</option>
+                    {% for country in countries %}
+                        <option value="{{ country }}" {% if country == selected_country %}selected{% endif %}>
+                            {{ country }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <input type="search" 
+                       name="search" 
+                       class="form-control" 
+                       placeholder="Buscar servidor..." 
+                       value="{{ search_query|default:'' }}">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Servers Grid -->
+    {% if servers %}
+        <div class="row g-4">
+            {% for server in servers %}
+                <div class="col-lg-6 col-xl-4">
+                    <div class="card server-card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="card-title mb-1">
+                                        <span class="flag-icon me-2">{{ server.flag_icon }}</span>
+                                        {{ server.name }}
+                                    </h5>
+                                    <p class="text-muted mb-0">{{ server.city }}, {{ server.country }}</p>
+                                </div>
+                                <div class="server-status">
+                                    {% if server.is_active %}
+                                        <span class="badge bg-success">Online</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Offline</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <div class="metric-card text-center p-2 bg-light rounded">
+                                        <div class="metric-value text-primary fw-bold">{{ server.ping }}ms</div>
+                                        <div class="metric-label small text-muted">Ping</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="metric-card text-center p-2 bg-light rounded">
+                                        <div class="metric-value text-success fw-bold">{{ server.load }}%</div>
+                                        <div class="metric-label small text-muted">Carga</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Performance Indicator -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span>Performance</span>
+                                    <span>
+                                        {% if server.ping < 30 %}Excelente
+                                        {% elif server.ping < 60 %}Boa
+                                        {% elif server.ping < 100 %}Regular
+                                        {% else %}Lenta
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="progress" style="height: 4px;">
+                                    {% if server.ping < 30 %}
+                                        <div class="progress-bar bg-success" style="width: 90%"></div>
+                                    {% elif server.ping < 60 %}
+                                        <div class="progress-bar bg-primary" style="width: 70%"></div>
+                                    {% elif server.ping < 100 %}
+                                        <div class="progress-bar bg-warning" style="width: 50%"></div>
+                                    {% else %}
+                                        <div class="progress-bar bg-danger" style="width: 30%"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="d-grid">
+                                {% if server.is_active %}
+                                    <button class="btn btn-primary" 
+                                            onclick="connectToServer({{ server.id }}, '{{ server.name }}', {{ server.ping }})">
+                                        <i class="fas fa-play me-2"></i>Conectar
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-secondary" disabled>
+                                        <i class="fas fa-times me-2"></i>Indisponível
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% comment %}
+        {% if is_paginated %}
+            <nav aria-label="Navegação de páginas" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if selected_country %}&country={{ selected_country }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; Primeira</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_country %}&country={{ selected_country }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_country %}&country={{ selected_country }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Próxima</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if selected_country %}&country={{ selected_country }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Última &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+        {% endcomment %}
+    {% else %}
+        <!-- No Servers Found -->
+        <div class="text-center py-5">
+            <i class="fas fa-server fa-4x text-muted mb-3"></i>
+            <h3 class="text-muted">Nenhum servidor encontrado</h3>
+            <p class="text-muted">
+                Tente ajustar os filtros de busca ou aguarde novos servidores serem adicionados.
+            </p>
+            <a href="{% url 'servers' %}" class="btn btn-primary">
+                <i class="fas fa-refresh me-2"></i>Ver Todos os Servidores
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="connectingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Conectando...</span>
+                </div>
+                <h5>Conectando ao servidor...</h5>
+                <p class="text-muted mb-0">Por favor, aguarde enquanto estabelecemos a conexão.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.server-card {
+    transition: all 0.3s ease;
+    border: 1px solid transparent !important;
+}
+
+.server-card:hover {
+    transform: translateY(-2px);
+    border-color: #007bff !important;
+    box-shadow: 0 8px 25px rgba(0,123,255,0.15) !important;
+}
+
+.metric-card {
+    transition: all 0.3s ease;
+}
+
+.server-card:hover .metric-card {
+    background-color: #e3f2fd !important;
+}
+
+.flag-icon {
+    font-size: 1.2em;
+}
+
+.metric-value {
+    font-size: 1.1rem;
+}
+
+.progress {
+    transition: all 0.3s ease;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+}
+
+.server-status .badge {
+    font-size: 0.7rem;
+}
+
+@media (max-width: 768px) {
+    .server-card .card-body {
+        padding: 1rem !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function connectToServer(serverId, serverName, serverPing) {
+    // Mostrar modal de carregamento
+    const modal = new bootstrap.Modal(document.getElementById('connectingModal'));
+    modal.show();
+    
+    // Simular ping antes da conexão
+    const pingBefore = Math.floor(Math.random() * 50) + serverPing;
+    
+    fetch(`/connect/${serverId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            ping_before: pingBefore
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        modal.hide();
+        
+        if (data.success) {
+            // Mostrar notificação de sucesso
+            showNotification('success', `Conectado com sucesso ao ${serverName}!`);
+            
+            // Redirecionar para o dashboard após 2 segundos
+            setTimeout(() => {
+                window.location.href = '/dashboard/';
+            }, 2000);
+        } else {
+            showNotification('danger', 'Erro ao conectar: ' + data.message);
+        }
+    })
+    .catch(error => {
+        modal.hide();
+        console.error('Erro:', error);
+        showNotification('danger', 'Erro de conexão. Tente novamente.');
+    });
+}
+
+function showNotification(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove após 5 segundos
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+
+// Adicionar token CSRF aos formulários AJAX
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+if (!csrfToken) {
+    // Criar token CSRF se não existir
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = 'csrfmiddlewaretoken';
+    tokenInput.value = '{{ csrf_token }}';
+    document.body.appendChild(tokenInput);
+}
+</script>
+{% endblock %}

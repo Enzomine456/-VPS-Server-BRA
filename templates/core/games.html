@@ -1,0 +1,447 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Jogos Suportados - ExitLag Free{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="display-6 fw-bold mb-2">
+                <i class="fas fa-gamepad text-primary me-2"></i>
+                Jogos Suportados
+            </h1>
+            <p class="lead text-muted">
+                Perfis de otimização específicos para seus jogos favoritos.
+            </p>
+        </div>
+        <div class="col-lg-4">
+            <!-- Filtros -->
+            <form method="get" class="d-flex gap-2">
+                <select name="category" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todas as categorias</option>
+                    {% for category in categories %}
+                        <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>
+                            {{ category }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <input type="search" 
+                       name="search" 
+                       class="form-control" 
+                       placeholder="Buscar jogo..." 
+                       value="{{ search_query|default:'' }}">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Games Grid -->
+    {% if games %}
+        <div class="row g-4">
+            {% for game in games %}
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <div class="card game-card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4 text-center">
+                            <!-- Game Icon -->
+                            <div class="game-icon-container mb-3">
+                                {% if game.icon %}
+                                    <img src="{{ game.icon.url }}" alt="{{ game.name }}" class="game-icon">
+                                {% else %}
+                                    <div class="game-icon-placeholder">
+                                        <i class="fas fa-gamepad fa-3x text-primary"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Game Info -->
+                            <h5 class="card-title mb-2">{{ game.name }}</h5>
+                            <p class="text-muted small mb-2">{{ game.category }}</p>
+                            
+                            {% if game.description %}
+                                <p class="text-muted small mb-3">{{ game.description|truncatechars:100 }}</p>
+                            {% endif %}
+
+                            <!-- Optimization Status -->
+                            <div class="mb-3">
+                                {% if game.is_optimized %}
+                                    <span class="badge bg-success mb-2">
+                                        <i class="fas fa-check me-1"></i>Otimizado
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning mb-2">
+                                        <i class="fas fa-clock me-1"></i>Em breve
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2">
+                                {% if game.is_optimized %}
+                                    <button class="btn btn-primary btn-sm" 
+                                            onclick="optimizeForGame('{{ game.name }}', {{ game.id }})">
+                                        <i class="fas fa-rocket me-2"></i>Otimizar para {{ game.name }}
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" 
+                                            onclick="toggleFavorite({{ game.id }}, '{{ game.name }}')">
+                                        <i class="fas fa-heart me-1"></i>Adicionar aos Favoritos
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        <i class="fas fa-clock me-2"></i>Em desenvolvimento
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Stats Section -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="stat-item">
+                                    <h3 class="fw-bold">{{ games|length }}</h3>
+                                    <p class="mb-0">Jogos Suportados</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-item">
+                                    <h3 class="fw-bold">100%</h3>
+                                    <p class="mb-0">Gratuito</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-item">
+                                    <h3 class="fw-bold">24/7</h3>
+                                    <p class="mb-0">Suporte</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-item">
+                                    <h3 class="fw-bold">∞</h3>
+                                    <p class="mb-0">Uso Ilimitado</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- No Games Found -->
+        <div class="text-center py-5">
+            <i class="fas fa-gamepad fa-4x text-muted mb-3"></i>
+            <h3 class="text-muted">Nenhum jogo encontrado</h3>
+            <p class="text-muted">
+                Tente ajustar os filtros de busca ou aguarde novos jogos serem adicionados.
+            </p>
+            <a href="{% url 'games' %}" class="btn btn-primary">
+                <i class="fas fa-refresh me-2"></i>Ver Todos os Jogos
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- Popular Categories -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="mb-4">Categorias Populares</h3>
+            <div class="row g-3">
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="?category=MOBA" class="category-card">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body py-3">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h6 class="mb-0">MOBA</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="?category=FPS" class="category-card">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body py-3">
+                                <i class="fas fa-crosshairs fa-2x text-danger mb-2"></i>
+                                <h6 class="mb-0">FPS</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="?category=Battle Royale" class="category-card">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body py-3">
+                                <i class="fas fa-trophy fa-2x text-warning mb-2"></i>
+                                <h6 class="mb-0">Battle Royale</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="?category=MMORPG" class="category-card">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body py-3">
+                                <i class="fas fa-dragon fa-2x text-success mb-2"></i>
+                                <h6 class="mb-0">MMORPG</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="?category=Racing" class="category-card">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body py-3">
+                                <i class="fas fa-car fa-2x text-info mb-2"></i>
+                                <h6 class="mb-0">Racing</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-2 col-sm-4 col-6">
+                    <a href="?category=Sports" class="category-card">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body py-3">
+                                <i class="fas fa-futbol fa-2x text-secondary mb-2"></i>
+                                <h6 class="mb-0">Sports</h6>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Optimization Modal -->
+<div class="modal fade" id="optimizationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-rocket me-2"></i>Otimização de Jogo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-gamepad fa-3x text-primary mb-3"></i>
+                    <h4 id="gameTitle">Nome do Jogo</h4>
+                </div>
+                <p>Escolha um servidor otimizado para este jogo:</p>
+                <div id="recommendedServers" class="list-group">
+                    <!-- Servers will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.game-card {
+    transition: all 0.3s ease;
+    border: 1px solid transparent !important;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    border-color: #007bff !important;
+    box-shadow: 0 10px 30px rgba(0,123,255,0.15) !important;
+}
+
+.game-icon-container {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-icon {
+    max-width: 64px;
+    max-height: 64px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.game-icon-placeholder {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 0 auto;
+}
+
+.category-card {
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.category-card:hover {
+    color: inherit;
+    text-decoration: none;
+    transform: translateY(-2px);
+}
+
+.category-card .card {
+    transition: all 0.3s ease;
+}
+
+.category-card:hover .card {
+    border-color: #007bff !important;
+    box-shadow: 0 5px 15px rgba(0,123,255,0.15) !important;
+}
+
+.stat-item {
+    padding: 1rem 0;
+}
+
+.stat-item h3 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .game-card .card-body {
+        padding: 1rem !important;
+    }
+    
+    .stat-item h3 {
+        font-size: 2rem;
+    }
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.btn-sm {
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function optimizeForGame(gameName, gameId) {
+    // Definir título do modal
+    document.getElementById('gameTitle').textContent = gameName;
+    
+    // Buscar servidores recomendados (simulado)
+    const recommendedServersDiv = document.getElementById('recommendedServers');
+    recommendedServersDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+    
+    // Simular busca de servidores
+    setTimeout(() => {
+        const servers = [
+            { id: 1, name: 'Brasil São Paulo', ping: 25, country: '🇧🇷' },
+            { id: 2, name: 'Brasil Rio de Janeiro', ping: 30, country: '🇧🇷' },
+            { id: 3, name: 'Argentina Buenos Aires', ping: 45, country: '🇦🇷' }
+        ];
+        
+        let serversHtml = '';
+        servers.forEach(server => {
+            serversHtml += `
+                <button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" 
+                        onclick="connectToServerFromGame(${server.id}, '${server.name}', ${gameId})">
+                    <span>
+                        <span class="me-2">${server.country}</span>
+                        ${server.name}
+                    </span>
+                    <span class="badge bg-primary">${server.ping}ms</span>
+                </button>
+            `;
+        });
+        
+        recommendedServersDiv.innerHTML = serversHtml;
+    }, 1000);
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('optimizationModal'));
+    modal.show();
+}
+
+function connectToServerFromGame(serverId, serverName, gameId) {
+    // Fechar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('optimizationModal'));
+    modal.hide();
+    
+    // Conectar ao servidor
+    fetch(`/connect/${serverId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            ping_before: Math.floor(Math.random() * 50) + 70,
+            game_id: gameId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('success', `Conectado ao ${serverName} e otimizado para o jogo!`);
+            setTimeout(() => {
+                window.location.href = '/dashboard/';
+            }, 2000);
+        } else {
+            showNotification('danger', 'Erro ao conectar: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        showNotification('danger', 'Erro de conexão. Tente novamente.');
+    });
+}
+
+function toggleFavorite(gameId, gameName) {
+    // Implementar lógica de favoritos
+    showNotification('info', `${gameName} será adicionado aos favoritos em breve!`);
+}
+
+function showNotification(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+        }
+    }, 5000);
+}
+
+// Adicionar token CSRF
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+if (!csrfToken) {
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = 'csrfmiddlewaretoken';
+    tokenInput.value = '{{ csrf_token }}';
+    document.body.appendChild(tokenInput);
+}
+</script>
+{% endblock %}

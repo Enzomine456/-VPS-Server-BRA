@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ExitLag Free - VPN Gratuito para Gamers{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-primary text-white">
+    <div class="container">
+        <div class="row align-items-center min-vh-50">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    <i class="fas fa-rocket me-3"></i>
+                    ExitLag Free
+                </h1>
+                <p class="lead mb-4">
+                    Reduza seu ping e melhore sua experiência de jogo com nossa VPN gratuita otimizada para gamers brasileiros.
+                </p>
+                <div class="mb-4">
+                    <div class="row">
+                        <div class="col-sm-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-server text-warning me-2"></i>
+                                <span><strong>{{ total_servers }}</strong> Servidores</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-gamepad text-success me-2"></i>
+                                <span><strong>{{ total_games }}</strong> Jogos</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-infinity text-info me-2"></i>
+                                <span><strong>100%</strong> Gratuito</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-grid gap-2 d-md-flex">
+                    <a href="{% url 'register' %}" class="btn btn-warning btn-lg px-4">
+                        <i class="fas fa-rocket me-2"></i>Começar Agora
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-sign-in-alt me-2"></i>Já tenho conta
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <div class="position-relative">
+                        <div class="bg-white bg-opacity-10 rounded-3 p-4">
+                            <h3 class="text-warning mb-3">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Melhore seu Ping
+                            </h3>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="ping-display before">
+                                        <div class="ping-value text-danger">120ms</div>
+                                        <div class="ping-label">Antes</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="ping-display after">
+                                        <div class="ping-value text-success">45ms</div>
+                                        <div class="ping-label">Depois</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <span class="badge bg-success fs-6">-62% de redução!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="display-5 fw-bold mb-3">Por que usar o ExitLag Free?</h2>
+                <p class="lead text-muted">
+                    Todas as funcionalidades premium do ExitLag, mas completamente gratuito para sempre.
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon text-primary mb-3">
+                            <i class="fas fa-tachometer-alt fa-3x"></i>
+                        </div>
+                        <h4>Redução de Ping</h4>
+                        <p class="text-muted">
+                            Algoritmos avançados para encontrar a melhor rota para seus jogos favoritos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon text-success mb-3">
+                            <i class="fas fa-globe-americas fa-3x"></i>
+                        </div>
+                        <h4>Servidores Globais</h4>
+                        <p class="text-muted">
+                            Rede de servidores otimizados para gamers em múltiplos países.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon text-warning mb-3">
+                            <i class="fas fa-gamepad fa-3x"></i>
+                        </div>
+                        <h4>Otimizado para Jogos</h4>
+                        <p class="text-muted">
+                            Perfis específicos para os jogos mais populares entre gamers brasileiros.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Games Section -->
+{% if featured_games %}
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center mb-5">
+                <h2 class="display-6 fw-bold mb-3">Jogos Suportados</h2>
+                <p class="lead text-muted">
+                    Perfis de otimização específicos para seus jogos favoritos.
+                </p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            {% for game in featured_games %}
+            <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                <div class="card game-card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-3">
+                        {% if game.icon %}
+                            <img src="{{ game.icon.url }}" alt="{{ game.name }}" class="game-icon mb-2">
+                        {% else %}
+                            <div class="game-icon-placeholder mb-2">
+                                <i class="fas fa-gamepad fa-2x text-primary"></i>
+                            </div>
+                        {% endif %}
+                        <h6 class="card-title mb-1">{{ game.name }}</h6>
+                        <small class="text-muted">{{ game.category }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-rocket me-2"></i>Ver Todos os Jogos
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2 class="display-6 fw-bold mb-3">Pronto para melhorar seu jogo?</h2>
+                <p class="lead mb-0">
+                    Junte-se a milhares de gamers que já melhoraram seu ping com o ExitLag Free.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'register' %}" class="btn btn-warning btn-lg px-4">
+                    <i class="fas fa-rocket me-2"></i>Começar Gratuitamente
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.min-vh-50 {
+    min-height: 50vh;
+}
+
+.ping-display {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.ping-value {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.ping-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .feature-icon {
+    transform: scale(1.1);
+}
+
+.game-card {
+    transition: transform 0.3s ease;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+}
+
+.game-icon {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+}
+
+.game-icon-placeholder {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+</style>
+{% endblock %}
