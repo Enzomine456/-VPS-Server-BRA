@@ -29,7 +29,7 @@ A Django-based web application that provides VPN server optimization for gaming,
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Enzomine456/VPS-Server-BRA.git
+   git clone https://github.com/Enzomine456/-VPS-Server-BRA.git
    cd VPS-Server-BRA
    ```
 
